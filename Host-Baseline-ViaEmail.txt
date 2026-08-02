@@ -1,0 +1,54 @@
+<dashboard theme="dark">
+  <label>HCM Demo</label>
+  <row>
+    <panel>
+      <chart>
+        <title>Remote Addresses</title>
+        <search>
+          <query>index=host Command.Module=GetNetstat Data.Protocol!="UDP" Data.RemoteAddress!="0.0.0.0" Data.RemoteAddress!="10.100*" Data.RemoteAddress!="[::]" Data.RemoteAddress!="[::1]" Data.RemoteAddress!="127.0.*"
+| Stats count by Data.RemoteAddress
+| Sort -count</query>
+          <earliest>0</earliest>
+          <latest></latest>
+        </search>
+        <option name="charting.chart">column</option>
+        <option name="charting.drilldown">all</option>
+        <option name="height">254</option>
+        <option name="refresh.display">progressbar</option>
+        <drilldown>
+          <link target="_blank">/app/search/users</link>
+        </drilldown>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <chart>
+        <title>Remote Connected Hosts</title>
+        <search>
+          <query>index=host Command.Module=GetNetstat Data.Protocol!="UDP" Data.RemoteAddress!="0.0.0.0" Data.RemoteAddress!="10.100*" Data.RemoteAddress!="[::]" Data.RemoteAddress!="[::1]"
+| Stats count by ComputerName
+| sort -count</query>
+          <earliest>0</earliest>
+          <latest></latest>
+        </search>
+        <option name="charting.chart">column</option>
+        <option name="charting.drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <table>
+        <search>
+          <query>index = host Command.Module="GetProcesses"
+| stats count by Data.CommandLine, Data.Image.AccessedTime, Data.Image.Name</query>
+          <earliest>0</earliest>
+          <latest></latest>
+        </search>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+  </row>
+</dashboard>
