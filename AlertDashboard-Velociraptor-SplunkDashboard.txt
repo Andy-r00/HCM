@@ -1,0 +1,257 @@
+<form version="1.1" theme="dark">
+  <label>Alert DashBoard</label>
+  <fieldset submitButton="false" autoRun="true">
+    <input type="time" token="time">
+      <label>Time</label>
+      <default>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+    <input type="time" token="t">
+      <label>Time</label>
+      <default>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <title>Schedule Task Creation Alert</title>
+      <single>
+        <search>
+          <query>index=host  Artifact="Windows.System.Services" | search NOT [inputlookup services.csv | fields AbsoluteExePath, UserAccount] | stats count</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="colorMode">none</option>
+        <option name="drilldown">all</option>
+        <option name="rangeColors">["0x118832","0xd41f1f","0xd41f1f","0xd41f1f"]</option>
+        <option name="rangeValues">[0,30,70]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="unitPosition">before</option>
+        <option name="useColors">1</option>
+        <drilldown>
+          <link target="_self">/app/search/alert</link>
+        </drilldown>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>User Baseline</title>
+        <search>
+          <query>index=host Artifact="Windows.Sys.AllUsers" | search NOT [inputlookup Users.csv | fields Name, UUID] | stats count</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="drilldown">all</option>
+        <option name="rangeColors">["0x53a051","0xd41f1f","0xd41f1f","0xd41f1f","0xd41f1f"]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="useColors">1</option>
+        <drilldown>
+          <link target="_self">/app/search/alert_dashboard</link>
+        </drilldown>
+      </single>
+    </panel>
+    <panel>
+      <title>Schedule Task Update Alert</title>
+      <input type="time" token="field1">
+        <label></label>
+        <default>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+        </default>
+      </input>
+      <single>
+        <title>Schedule Task Update</title>
+        <search>
+          <query>index=host Artifact="Windows.EventLogs.Evtx"  | search EventID= 4698  | stats count as EventID</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="drilldown">all</option>
+        <option name="rangeColors">["0x118832","0xd41f1f","0xd41f1f","0xd41f1f","0xdc4e41"]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="useColors">1</option>
+        <drilldown>
+          <link target="_self">/app/search/alert</link>
+        </drilldown>
+      </single>
+    </panel>
+    <panel>
+      <title>Service Creation Alert</title>
+      <single>
+        <title>Service Creation</title>
+        <search>
+          <query>index=host   Artifact="Windows.System.TaskScheduler/Analysis" | search NOT[ inputlookup scheduletask.csv | fields  OSPath, Command] | stats count</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="drilldown">all</option>
+        <option name="rangeColors">["0x118832","0xd41f1f","0xd41f1f","0xd41f1f","0xd41f1f"]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="useColors">1</option>
+        <drilldown>
+          <link target="_self">/app/search/alert</link>
+        </drilldown>
+      </single>
+    </panel>
+    <panel>
+      <title>Startup</title>
+      <single>
+        <search>
+          <query>index=host Artifact="Windows.Sys.StartupItems" | search NOT "*S.H.E.L.L*" AND NOT [inputlookup StartupItems.csv | fields OSPath,Name,Details] | stats count</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="rangeColors">["0x53a051","0xd41f1f","0xd41f1f","0xd41f1f","0xd41f1f"]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="useColors">1</option>
+      </single>
+    </panel>
+    <panel>
+      <title>Group Polilcy Modification Alert</title>
+      <single>
+        <title>Group Policy Modification</title>
+        <search>
+          <query>index=host Artifact="Windows.EventLogs.Evtx"  | search EventID=5136 OR EventID=5137 | stats count as EventID</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="drilldown">all</option>
+        <option name="rangeColors">["0x118832","0xd41f1f","0xd41f1f","0xd41f1f","0xd41f1f"]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="useColors">1</option>
+        <drilldown>
+          <link target="_self">/app/search/persistence</link>
+        </drilldown>
+      </single>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>External IP communication Alert</title>
+      <single>
+        <title>External IP</title>
+        <search>
+          <query>index=* index=* Artifact="Windows.Network.Netstat" Raddr.IP!=14.2.4* Raddr.IP!= :: Raddr.IP!=0.0.0.0 Raddr.IP!=127.0.0.1 Raddr.IP!= ::1 Raddr.IP!="" Raddr.IP!=105.124.56.2 Raddr.IP!=10.10*| stats count as Raddr.IP</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="drilldown">all</option>
+        <option name="rangeColors">["0x118832","0xd41f1f","0xd41f1f","0xd41f1f","0xd41f1f"]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="useColors">1</option>
+        <drilldown>
+          <link target="_self">/app/search/process_hunt</link>
+        </drilldown>
+      </single>
+    </panel>
+    <panel>
+      <title>User Creation Alert</title>
+      <single>
+        <title>User Creation Alert</title>
+        <search>
+          <query>index=host Artifact="Windows.EventLogs.Evtx"  | search EventID=4720 | stats count as EventID</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="drilldown">all</option>
+        <option name="rangeColors">["0x118832","0xd41f1f","0xd41f1f","0xd41f1f","0xd41f1f"]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="useColors">1</option>
+        <drilldown>
+          <link target="_blank">/app/search/alert_dashboard</link>
+        </drilldown>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>Priviledge Escalation Alert</title>
+        <search>
+          <query>index=host Artifact="Windows.EventLogs.Evtx" | search EventID=4729 | stats count as EventID</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="drilldown">all</option>
+        <option name="rangeColors">["0x118832","0xd41f1f","0xd41f1f","0xd41f1f","0xd41f1f"]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="useColors">1</option>
+        <drilldown>
+          <link target="_self">/app/search/alert_dashboard</link>
+        </drilldown>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>Process Baseline</title>
+        <search>
+          <query>index=host  Artifact="Generic.System.Pstree" | search NOT [inputlookup Process.csv | fields Exe, Name] | stats count</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="drilldown">all</option>
+        <option name="rangeColors">["0x53a051","0xd41f1f","0xd41f1f","0xd41f1f","0xd41f1f"]</option>
+        <option name="useColors">1</option>
+        <drilldown>
+          <link target="_blank">/app/search/process_hunt</link>
+        </drilldown>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>Clearing Event Logs</title>
+        <search>
+          <query>index=host Artifact="Windows.EventLogs.Evtx"  | search EventID=1102 | stats count as EventID</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="drilldown">all</option>
+        <option name="rangeColors">["0x118832","0xd41f1f","0xd41f1f","0xd41f1f"]</option>
+        <option name="rangeValues">[0,70,100]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="useColors">1</option>
+        <drilldown>
+          <link target="_self">/app/search/alert</link>
+        </drilldown>
+      </single>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <input type="time" token="eventtime">
+        <label>Log TIme</label>
+        <default>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+        </default>
+      </input>
+      <chart>
+        <title>PowerShell Alerts</title>
+        <search>
+          <query>index=host source="velociraptor" Artifact=Windows.EventLogs.PowershellModule | eval event_time=strptime('EventTime', "%Y-%m-%dT%H:%M:%S.%QZ") | where event_time &gt;= relative_time(now(), "$eventtime.earliest$") | rex field=_raw "User\s*=\s*(?&lt;user&gt;[^\s]+)\\\\r\\\\n"  | search user!="*SYSTEM"|  stats count by user</query>
+          <earliest>$time.earliest$</earliest>
+          <latest>$time.latest$</latest>
+        </search>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisY.maximumNumber">500</option>
+        <option name="charting.chart">column</option>
+        <option name="charting.chart.showDataLabels">all</option>
+        <option name="charting.chart.stackMode">stacked</option>
+        <option name="charting.drilldown">all</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisStart</option>
+        <option name="charting.legend.placement">right</option>
+        <option name="refresh.display">progressbar</option>
+        <drilldown>
+          <link target="_self">/app/search/powershell_dasboard?form.field1=$click.value$</link>
+        </drilldown>
+      </chart>
+    </panel>
+  </row>
+</form>
