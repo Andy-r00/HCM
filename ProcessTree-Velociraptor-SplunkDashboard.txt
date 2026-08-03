@@ -1,0 +1,95 @@
+<form version="1.1" theme="light">
+  <label>Process_Tree</label>
+  <description>pstree type shitt</description>
+  <fieldset submitButton="false">
+    <input type="dropdown" token="WS" searchWhenChanged="true">
+      <label>WorkStation</label>
+      <choice value="*">All</choice>
+      <default>*</default>
+      <initialValue>*</initialValue>
+      <fieldForLabel>HostName</fieldForLabel>
+      <fieldForValue>HostName</fieldForValue>
+      <search>
+        <query>index=host Artifact=* Artifact="Generic.System.Pstree" ClientId="*"
+| join ClientId [search index=host Artifact="Generic.Client.Info/WindowsInfo" | rename "Computer Info.DNSHostName" as HostName] 
+| search HostName=* | table HostName</query>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </search>
+    </input>
+    <input type="text" token="Process" searchWhenChanged="true">
+      <label>Process</label>
+      <default>*</default>
+      <initialValue>*</initialValue>
+      <prefix>*</prefix>
+      <suffix>*</suffix>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <title>whats running from what type shitt aha</title>
+      <viz type="dendrogram_viz.dendrogram_viz">
+        <search>
+          <query>index=host Artifact=* Artifact="Generic.System.Pstree" ClientId="*"
+| dedup CallChain
+| join ClientId [search index=host Artifact="Generic.Client.Info/WindowsInfo" | rename "Computer Info.DNSHostName" as HostName] 
+| eval path = if(0=1,(mvjoin(split(CallChain, "-&gt;"), "/")),(HostName."/".mvjoin(split(CallChain, "-&gt;"),"/")))
+| search HostName=$WS$
+| search CallChain=$Process$
+| table path</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="dendrogram_viz.dendrogram_viz.color1">#171d21</option>
+        <option name="dendrogram_viz.dendrogram_viz.color2">#ffffff</option>
+        <option name="dendrogram_viz.dendrogram_viz.delimiter">/</option>
+        <option name="dendrogram_viz.dendrogram_viz.html">no</option>
+        <option name="dendrogram_viz.dendrogram_viz.label_size">10</option>
+        <option name="dendrogram_viz.dendrogram_viz.layout">vertical</option>
+        <option name="dendrogram_viz.dendrogram_viz.linkcolor">#555555</option>
+        <option name="dendrogram_viz.dendrogram_viz.max_rows">100000</option>
+        <option name="dendrogram_viz.dendrogram_viz.node_ancestor_spacing">100</option>
+        <option name="dendrogram_viz.dendrogram_viz.node_sibling_spacing">30</option>
+        <option name="dendrogram_viz.dendrogram_viz.node_size">4</option>
+        <option name="dendrogram_viz.dendrogram_viz.nodecolor">#999999</option>
+        <option name="dendrogram_viz.dendrogram_viz.radius">300</option>
+        <option name="dendrogram_viz.dendrogram_viz.tidy">yes</option>
+        <option name="dendrogram_viz.dendrogram_viz.zoom">yes</option>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+      </viz>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Tabled Version</title>
+      <table>
+        <search>
+          <query>index="host" Artifact="Generic.System.Pstree" ClientId="*"
+| dedup CallChain
+| join ClientId [
+search index=host Artifact="Generic.Client.Info/WindowsInfo" | rename "Computer Info.DNSHostName" as HostName
+] 
+| stats count by HostName, timestamp, Username, CallChain, Exe, CommandLine, Name, Pid, Ppid
+| search CallChain=$Process$
+| search HostName=$WS$</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">100</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+  </row>
+</form>
